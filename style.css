@@ -1,0 +1,359 @@
+
+/* ===============================
+   Stellantis App — Design System
+   Unified Stylesheet (style.css)
+   =============================== */
+
+/* ---- CSS Variables (Theme) ---- */
+:root {
+  --cor-fundo: #0b1d30;
+  --cor-fundo-grad-a: #1b2735;
+  --cor-fundo-grad-b: #090a0f;
+
+  --cor-caixa: rgba(28, 43, 61, 0.9);
+  --cor-borda-caixa: rgba(0, 212, 255, 0.15);
+
+  --cor-primaria: #00d2ff;        /* Primary brand */
+  --cor-primaria-hover: #3a7bd5;  /* Hover gradient partner */
+  --cor-primaria-escuro: #1a4ed8; /* Fallback hover */
+  --cor-texto: #ffffff;
+  --cor-texto-suave: #ffffffcc;
+
+  --cor-sucesso: #3ddc84;
+  --cor-alerta: #f0ad4e;
+  --cor-erro: #ff4444;
+
+  --sombra-suave: 0 0 30px rgba(0,255,255,0.15), inset 0 0 10px rgba(0,255,255,0.05);
+  --radius: 20px;
+
+  --font-display: 'Orbitron', sans-serif;
+  --font-base: 'Inter', sans-serif;
+}
+
+/* ---- Reset/Normalização ---- */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-base);
+  color: var(--cor-texto);
+  background-color: var(--cor-fundo);
+  background-image: radial-gradient(circle at top left, var(--cor-fundo-grad-a), var(--cor-fundo-grad-b));
+  padding: 1rem;
+}
+
+/* ------------------------------
+   Layouts / Containers
+   ------------------------------ */
+.container {
+  max-width: 920px;
+  margin: auto;
+  padding: 2rem;
+  border-radius: var(--radius);
+  background: var(--cor-caixa);
+  border: 1px solid var(--cor-borda-caixa);
+  box-shadow: var(--sombra-suave);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeInUp .6s ease-in-out;
+}
+
+.center-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ------------------------------
+   Tipografia / Títulos
+   ------------------------------ */
+h1, h2, h3 {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  letter-spacing: 2px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 6px;
+  background: linear-gradient(90deg, var(--cor-primaria), var(--cor-primaria-hover));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 10px rgba(0,210,255,0.5);
+}
+h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--cor-primaria);
+  opacity: .85;
+}
+h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--cor-texto-suave);
+}
+
+/* ------------------------------
+   Formulários / Campos
+   ------------------------------ */
+label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+input, select, textarea {
+  padding: 0.7rem;
+  border: 1px solid rgba(0, 210, 255, 0.35);
+  border-radius: 12px;
+  font-size: 1rem;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  transition: all .2s ease-in-out;
+  outline: none;
+}
+input::placeholder, textarea::placeholder { color: #cfe9ff88; }
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--cor-primaria);
+  box-shadow: 0 0 6px var(--cor-primaria);
+}
+
+.input-outros { display: none; }
+.input-outros.show { display: block; }
+
+/* ------------------------------
+   Botões
+   ------------------------------ */
+button, .btn {
+  background: linear-gradient(135deg, var(--cor-primaria), var(--cor-primaria-hover));
+  color: #fff;
+  border: 1px solid var(--cor-primaria);
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .3s ease;
+  box-shadow: 0 0 6px rgba(0,210,255,0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 48px;
+}
+button:hover, .btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 12px rgba(0,210,255,0.5);
+}
+.btn-secondary {
+  background: #233246;
+  border-color: #2e3c51;
+}
+.btn-danger {
+  background: #b92e2e;
+  border-color: #d33b3b;
+}
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .75rem;
+}
+
+/* ------------------------------
+   Informações / Mensagens
+   ------------------------------ */
+.info {
+  font-weight: 700;
+  text-align: center;
+  color: var(--cor-alerta);
+}
+.warning { color: var(--cor-erro); font-size: .9rem; }
+
+/* Mensagens tipo banner (página de menu) */
+.mensagem-padrao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6em;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+  font-family: var(--font-base);
+  box-shadow: 0 4px 32px #00000022;
+  margin: 1em auto;
+  max-width: 90vw;
+  min-width: 180px;
+  text-align: center;
+  font-weight: 600;
+}
+.mensagem-info { background: #fff3cd; color: #856404; border: 1.5px solid #ffe066; }
+.mensagem-alerta, .mensagem-erro { background: #f8d7da; color: #721c24; border: 1.5px solid var(--cor-erro); }
+.mensagem-advertencia { background: #fffbe6; color: #856404; border: 1.5px solid #ffc107; }
+.mensagem-sucesso { background: #d1ecf1; color: #00668c; border: 1.5px solid var(--cor-primaria); }
+
+/* ------------------------------
+   Tabelas
+   ------------------------------ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  background: #182c39;
+  border-radius: 10px;
+  overflow: hidden;
+}
+th, td {
+  border: 1px solid #2e3c51;
+  padding: 0.6rem;
+  text-align: center;
+  color: var(--cor-texto);
+}
+th {
+  background: #233246;
+  color: var(--cor-primaria);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+tbody tr:nth-child(even) { background: #172636; }
+tbody tr:hover { background: #1c3346; }
+/* Sticky header */
+thead th { position: sticky; top: 0; z-index: 2; }
+/* Totalizador */
+tr.totalizador td {
+  background: #182c39;
+  font-weight: bold;
+  color: var(--cor-alerta);
+}
+
+/* ------------------------------
+   Toasts e Confirm
+   ------------------------------ */
+#toastContainer {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+.toast {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #22364d;
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(0,0,0,.35);
+  font-weight: 600;
+  border-left: 4px solid var(--cor-sucesso);
+}
+.toast.success { border-left-color: var(--cor-sucesso); }
+.toast.warn    { border-left-color: var(--cor-alerta); }
+.toast.error   { border-left-color: var(--cor-erro); }
+
+/* Modal de confirmação genérico (overlay com 2 botões) */
+#confirmOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 11000;
+}
+#confirmBox {
+  background: #142132;
+  padding: 18px;
+  border-radius: 16px;
+  max-width: 420px;
+  width: calc(100% - 32px);
+  color: #fff;
+}
+#confirmBox .title { font-weight: 700; margin-bottom: 8px; color: var(--cor-primaria); }
+#confirmBox .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
+#confirmBox button { min-height: 40px; }
+
+/* Modal simples reutilizável */
+.modal-custom {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(15,30,44,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal-content-custom {
+  background: #142536;
+  border-radius: 18px;
+  padding: 2.2rem 1.6rem 1.6rem;
+  text-align: center;
+  color: #fff;
+  min-width: 220px;
+  max-width: 90vw;
+  font-size: 1.1rem;
+  position: relative;
+}
+.modal-content-custom .close-btn-custom {
+  position: absolute; top: 8px; right: 14px;
+  background: none; border: none; color: var(--cor-primaria);
+  font-size: 1.3rem; cursor: pointer;
+}
+.modal-content-custom .close-btn-custom:hover { color: var(--cor-erro); }
+
+/* ------------------------------
+   Utilidades
+   ------------------------------ */
+.auto-save-icon { text-align: right; font-size: .85rem; color: #55dd55; }
+.row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.col { flex: 1 1 240px; }
+
+/* ------------------------------
+   Responsividade
+   ------------------------------ */
+@media (max-width: 600px) {
+  .container { padding: 1rem; }
+  .button-group { flex-direction: column; }
+  button, .btn { width: 100%; justify-content: center; }
+  .auto-save-icon { text-align: center; margin-top: 0.5rem; }
+  table { font-size: 0.92rem; }
+}
+
+/* ------------------------------
+   Animações
+   ------------------------------ */
+@keyframes glowPulse {
+  from { box-shadow: 0 0 6px rgba(0,210,255,0.3); }
+  to   { box-shadow: 0 0 10px rgba(0,210,255,0.45); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ------------------------------
+   Ícone "Sair" (canto superior)
+   ------------------------------ */
+.sair-icone, .icone-sair, .btn-sair {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
+  cursor: pointer;
+  filter: drop-shadow(0 0 7px #00eaffcc);
+  transition: filter .2s;
+}
+.sair-icone:hover, .icone-sair:hover, .btn-sair:hover {
+  filter: drop-shadow(0 0 16px #00eaff);
+}

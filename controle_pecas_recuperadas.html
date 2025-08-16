@@ -1,0 +1,401 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+window.addEventListener("beforeunload", () => {
+  localStorage.setItem("pecas", JSON.stringify(pecas));
+});
+
+</script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stellantis - Controle de Peças Recuperadas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+
+  
+</head>
+<body>
+  <div class="container">
+
+<div style="position:absolute;top:16px;right:16px;z-index:9999;cursor:pointer;" onclick="window.location.href='interface_principal.html';" title="Sair">
+  <svg fill="#00d2ff" height="30" viewBox="0 0 24 24" width="30" xmlns="http://www.w3.org/2000/svg">
+    <path d="M16 13v-2H7V8l-5 4 5 4v-3h9z"/>
+    <path d="M20 3H10v2h10v14H10v2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+  </svg>
+</div>
+
+    <h1 style="font-family: 'Orbitron', sans-serif; font-size: 2.2rem; letter-spacing: 6px; background: linear-gradient(90deg, #00faff, #0077ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; text-shadow: 0 0 10px rgba(0,210,255,0.5);">STELLANTIS</h1>
+    <h2 style="font-size: 1.3rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #00d2ff; opacity: 0.85; margin-top: 0.3rem;">Segurança Patrimonial</h2>
+    <h3 style="font-size: 1.1rem; font-weight: 400; color: #ffffffcc; margin-bottom: 1rem;">Controle de Peças Recuperadas</h3>
+    <label>Setor:
+      <select id="setor" onchange="exibirInputOutros()">
+        <option value="Caixaria G08">Caixaria G08</option>
+        <option value="Caixaria G89">Caixaria G89</option>
+        <option value="Pátio central de Embalagens">Pátio central de Embalagens</option>
+        <option value="Jis G04 - 72">Jis G04 - 72</option>
+        <option value="Jis G04 - 73">Jis G04 - 73</option>
+        <option value="Mecanismo G04">Mecanismo G04</option>
+        <option value="Interni G89">Interni G89</option>
+        <option value="66AU G09">66AU G09</option>
+        <option value="Ilha Ecológica G38">Ilha Ecológica G38</option>
+        <option value="Pátio de Sucatas G15">Pátio de Sucatas G15</option>
+        <option value="Outros">Outros</option>
+      </select>
+      <input type="text" id="outrosSetor" class="input-outros" placeholder="Digite o nome do setor" />
+    </label>
+    <label>Turno:
+      <select id="turno">
+        <option value="1º">1º</option>
+        <option value="2º">2º</option>
+        <option value="3º">3º</option>
+      </select>
+    </label>
+    <label>Número de Desenho:
+      <input id="numeroDesenho" type="number" inputmode="numeric" pattern="\d*"/>
+      <span id="confirmIcon" style="display: none; margin-left: 0.5em;">✅</span>
+    </label>
+    <label>Descrição da Peça:
+      <input id="descricaoPeca" type="text"/>
+    </label>
+    <label>Quantidade:
+      <input id="quantidade" type="number" inputmode="numeric" pattern="\d*" min="1"/>
+    </label>
+    <label>Conferente:
+      <input id="conferente" type="text"/>
+    </label>
+    <div class="info" id="info"></div>
+    <div class="auto-save-icon">💾 Salvamento automático</div>
+    <div class="button-group">
+      <button type="button" onclick="adicionarItem()">➕ Adicionar</button>
+      <button type="button" onclick="gerarPlanilha()">📄 Gerar Excel</button>
+      <button type="button" onclick="desfazerUltimo()">↩️ Desfazer</button>
+      <button type="button" onclick="finalizarTurno()">✅ Finalizar Turno</button>
+      <button type="button" id="visualizarTabelaBtn">📊 Visualizar Tabela</button>
+    </div>
+    <div id="toastContainer" aria-live="polite" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:10000;display:flex;flex-direction:column;gap:8px;align-items:center;"></div>
+<table id="tabelaPecas">
+      <thead>
+        <tr>
+          <th>Setor</th>
+          <th>Turno</th>
+          <th>Conferente</th>
+          <th>N° Desenho</th>
+          <th>Descrição da Peça</th>
+          <th>Quantidade</th>
+          <th>Data e Hora</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <script>
+    let pecas = [];
+try {
+  pecas = JSON.parse(localStorage.getItem("pecas") || "[]");
+} catch (e) {
+  pecas = [];
+}
+
+    function exibirInputOutros() {
+      const select = document.getElementById("setor", true);
+      const inputOutros = document.getElementById("outrosSetor", true);
+      if (select.value === "Outros") {
+        inputOutros.classList.add("show", true);
+        inputOutros.focus();
+      } else {
+        inputOutros.classList.remove("show", true);
+        inputOutros.value = "";
+      }
+    }
+
+    function atualizarTabela() {
+      const tbody = document.querySelector("#tabelaPecas tbody", true);
+      tbody.innerHTML = "";
+      pecas.forEach(item => {
+        const tr = document.createElement("tr", true);
+        ["setor", "turno", "conferente", "numeroDesenho", "descricaoPeca", "quantidade", "dataHora"].forEach(key => {
+          const td = document.createElement("td", true);
+          td.textContent = item[key];
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      localStorage.setItem("pecas", JSON.stringify(pecas));
+      document.getElementById("info").textContent = pecas.length ?
+        `Último Desenho: ${pecas[pecas.length - 1].numeroDesenho} | Última Peça: ${pecas[pecas.length - 1].descricaoPeca}` : "";
+    }
+
+    function adicionarItem() {
+      let setor = document.getElementById("setor").value;
+      const turno = document.getElementById("turno").value;
+      const numeroDesenho = document.getElementById("numeroDesenho").value.trim().toUpperCase();
+      const descricaoPeca = document.getElementById("descricaoPeca").value.trim();
+      const conferente = document.getElementById("conferente").value.trim();
+      const quantidadeVal = parseInt(document.getElementById("quantidade").value);
+
+      // Se "Outros" estiver selecionado, use o valor digitado
+      if (setor === "Outros") {
+        const outros = document.getElementById("outrosSetor").value.trim();
+        if (!outros) {
+          mostrarModal("Preencha o nome do setor em 'Outros'.", true);
+          document.getElementById("outrosSetor").focus();
+          return;
+        }
+        setor = outros;
+      }
+
+      if (!numeroDesenho || !descricaoPeca || !conferente || isNaN(quantidadeVal) || quantidadeVal <= 0) {
+        mostrarModal("Preencha todos os campos obrigatórios.", true);
+        return;
+      }
+      const novoItem = {
+        setor,
+        turno,
+        numeroDesenho,
+        descricaoPeca,
+        quantidade: quantidadeVal,
+        conferente,
+        dataHora: new Date().toLocaleString()
+      };
+      pecas.push(novoItem);
+      mostrarMensagemConfirmacao(numeroDesenho);
+      mostrarIconeConfirmacao();
+      atualizarTabela();
+    }
+    
+function gerarPlanilha() {
+  const wb = XLSX.utils.book_new();
+  const ws_data = [
+    ["Setor", "Turno", "Conferente", "N° Desenho", "Descrição da Peça", "Quantidade", "Data e Hora"],
+    ...pecas.map(item => [
+      item.setor, item.turno, item.conferente, item.numeroDesenho, item.descricaoPeca, item.quantidade, item.dataHora
+    ])
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  ws["!freeze"] = { ySplit: 1 };
+    XLSX.utils.book_append_sheet(wb, ws, "Peças Recuperadas");
+  XLSX.writeFile(wb, "controle_pecas_recuperadas.xlsx");
+alert("Planilha gerada com sucesso!");
+  mostrarModal("Planilha gerada com sucesso", true);
+}
+
+    function desfazerUltimo() {
+      if (pecas.length === 0) return;
+      pecas.pop();
+      atualizarTabela();
+    }
+    function finalizarTurno() {
+      if (confirm("Tem certeza? Todos os dados serão apagados")) {
+        pecas = [];
+        
+        localStorage.removeItem("pecas", true);
+        atualizarTabela();
+        document.getElementById("numeroDesenho").value = "";
+        document.getElementById("descricaoPeca").value = "";
+        document.getElementById("quantidade").value = "";
+        document.getElementById("conferente").value = "";
+        document.getElementById("outrosSetor").value = "";
+        document.getElementById("outrosSetor").classList.remove("show", true);
+        document.getElementById("setor").value = "Caixaria G08";
+        mostrarModal("Turno finalizado com sucesso", true);
+      }
+    }
+    function toggleTabela() {
+      const tabela = document.getElementById("tabelaPecas", true);
+      const botao = document.getElementById("visualizarTabelaBtn", true);
+      if (tabela.style.display === "none") {
+        tabela.style.display = "table";
+        botao.textContent = "🙈 Esconder Tabela";
+      } else {
+        tabela.style.display = "none";
+        botao.textContent = "📊 Visualizar Tabela";
+      }
+    }
+    function mostrarIconeConfirmacao() {
+      const icon = document.getElementById("confirmIcon", true);
+      if (icon) {
+        icon.style.display = "inline";
+        setTimeout(() => {
+          icon.style.display = "none";
+        }, 3000);
+      }
+    }
+    function mostrarMensagemConfirmacao(numeroDesenho) {
+      const info = document.getElementById("info", true);
+      info.textContent = `✅ Número de Desenho ${numeroDesenho} adicionado com sucesso`;
+      setTimeout(() => {
+        atualizarTabela();
+      }, 3000);
+    }
+    document.addEventListener("DOMContentLoaded", function() {
+      const tabela = document.getElementById("tabelaPecas", true);
+      if (tabela) {
+        tabela.style.display = "none";
+      }
+      atualizarTabela();
+  if (JSON.parse(localStorage.getItem("pecas")||"[]").length > 0) { alert("Informações restauradas"); }
+      document.getElementById("visualizarTabelaBtn").addEventListener("click", toggleTabela);
+      document.getElementById("setor").addEventListener("change", exibirInputOutros);
+    });
+  
+window.addEventListener('storage', () => {
+    if (!localStorage.getItem("usuario") || !localStorage.getItem("registro")) {
+        const campo = document.getElementById("conferente", true);
+        if (campo) campo.value = "";
+    }
+});
+
+window.addEventListener("beforeunload", () => {
+  localStorage.setItem("pecas", JSON.stringify(pecas));
+});
+
+</script>
+
+<div id="modalCustom" class="modal-custom" style="display:none;">
+  <div class="modal-content-custom">
+    <button class="close-btn-custom" onclick="fecharModalCustom()">×</button>
+    <span id="modalCustomMsg"></span>
+  </div>
+</div>
+
+<script>
+function mostrarModal(msg, erro=false) {
+  const modal = document.getElementById("modalCustom", true);
+  const msgSpan = document.getElementById("modalCustomMsg", true);
+  modal.style.display = "flex";
+  msgSpan.textContent = msg;
+  msgSpan.style.color = erro ? "#ff4444" : "#00d2ff";
+}
+function fecharModalCustom() {
+  document.getElementById("modalCustom").style.display = "none";
+}
+
+window.addEventListener("beforeunload", () => {
+  localStorage.setItem("pecas", JSON.stringify(pecas));
+});
+
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const usuario = localStorage.getItem("usuario");
+  const registro = localStorage.getItem("registro");
+  const campoConferente = document.getElementById("conferente");
+  if (usuario && campoConferente) {
+    campoConferente.value = registro ? usuario + " / " + registro : usuario;
+  }
+});
+</script>
+
+<div id="confirmOverlay" role="dialog" aria-modal="true" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;z-index:11000;">
+  <div id="confirmBox" style="background:#142132;padding:18px;border-radius:16px;max-width:420px;width:calc(100% - 32px);color:#fff;">
+    <div class="title" style="font-weight:700;margin-bottom:8px;color:#00d2ff">Confirmação</div>
+    <div id="confirmMessage" style="color:#00d2ff">Tem certeza?</div>
+    <div class="actions" style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
+      <button id="confirmCancelBtn" style="background:#2e3c51;color:#fff;border:none;min-height:40px;border-radius:10px;padding:.5rem 1rem;">Cancelar</button>
+      <button id="confirmOkBtn" style="background:#3366ff;color:#fff;border:none;min-height:40px;border-radius:10px;padding:.5rem 1rem;">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Helpers
+  window.showToast = function(msg, type = "success", timeout = 3200) {
+    const wrap = document.getElementById("toastContainer");
+    if (!wrap) return;
+    const el = document.createElement("div");
+    el.className = "toast " + (type||"");
+    el.textContent = msg;
+    el.style.padding = "10px 14px";
+    el.style.borderRadius = "10px";
+    el.style.background = "#22364d";
+    el.style.color = "#fff";
+    el.style.boxShadow = "0 6px 24px rgba(0,0,0,.35)";
+    el.style.fontWeight = "600";
+    el.style.borderLeft = type==="error" ? "4px solid #ff4444" : (type==="warn" ? "4px solid #f0ad4e" : "4px solid #3ddc84");
+    wrap.appendChild(el);
+    setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity .4s"; }, timeout-400);
+    setTimeout(() => el.remove(), timeout);
+  };
+  window.openConfirm = function(message) {
+    return new Promise(resolve => {
+      const overlay = document.getElementById("confirmOverlay");
+      const msg = document.getElementById("confirmMessage");
+      const ok = document.getElementById("confirmOkBtn");
+      const cancel = document.getElementById("confirmCancelBtn");
+      if (!overlay || !msg || !ok || !cancel) return resolve(confirm(message||"Confirmar?"));
+      msg.textContent = message || "Confirmar?";
+      const cleanup = (result) => {
+        overlay.style.display = "none";
+        ok.onclick = cancel.onclick = null;
+        resolve(result);
+      };
+      ok.onclick = () => cleanup(true);
+      cancel.onclick = () => cleanup(false);
+      overlay.style.display = "flex";
+    });
+  };
+
+  // Non-destructive polish:
+  // 1) Redirect alert(...) to toast
+  const __oldAlert = window.alert;
+  window.alert = function(msg){ try{ showToast(String(msg), "success"); } catch(e){ __oldAlert(msg); } };
+
+  // 2) Wrap finalizarTurno(): keep original behavior but replace confirm por openConfirm
+  if (typeof window.finalizarTurno === "function") {
+    const __finalizarTurno = window.finalizarTurno;
+    window.finalizarTurno = function(){
+      openConfirm("Tem certeza? Todos os dados serão apagados").then(function(ok){
+        if(ok){ __finalizarTurno(); }
+      });
+    };
+  }
+})();
+
+  // 3) Padronizar mostrarModal: usar modal azul para erros/avisos; toast para sucesso/info
+  (function(){
+    const hasOriginal = typeof window.mostrarModal === "function";
+    const __origMostrarModal = hasOriginal ? window.mostrarModal : null;
+    window.mostrarModal = function(message, isError){
+      try {
+        // Para manter similaridade ao "modelo azul": letras azuis no modal
+        const overlay = document.getElementById("confirmOverlay");
+        const msg = document.getElementById("confirmMessage");
+        const okBtn = document.getElementById("confirmOkBtn");
+        const cancelBtn = document.getElementById("confirmCancelBtn");
+        if (overlay && msg && okBtn && cancelBtn) {
+          // Configura modal de 1 botão (OK)
+          cancelBtn.style.display = "none";
+          okBtn.textContent = "Fechar";
+          msg.textContent = String(message || "");
+          // Mantém padrão azul
+          msg.style.color = "#00d2ff";
+          const titleEl = overlay.querySelector(".title");
+          if (titleEl) titleEl.style.color = "#00d2ff";
+          okBtn.onclick = () => {
+            overlay.style.display = "none";
+          };
+          overlay.style.display = "flex";
+          return;
+        }
+      } catch(e) {
+        // fallback to toast se algo falhar
+      }
+      // Fallbacks padronizados
+      if (typeof showToast === "function") {
+        showToast(String(message||""), isError ? "warn" : "success");
+      } else if (__origMostrarModal) {
+        __origMostrarModal(message, isError);
+      } else {
+        alert(String(message||""));
+      }
+    };
+  })();
+</script>
+</body>
+</html>
