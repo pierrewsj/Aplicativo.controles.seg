@@ -1,0 +1,527 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Stellantis - Controle de Lacres</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+// === Helpers: Toast + Confirm ===
+function showToast(msg, type = "success", timeout = 3200) {
+  const wrap = document.getElementById("toastContainer");
+  if (!wrap) return;
+  const el = document.createElement("div");
+  el.className = "toast " + (type||"");
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity .4s"; }, timeout-400);
+  setTimeout(() => el.remove(), timeout);
+}
+
+function openConfirmSimple(message) {
+  return new Promise(resolve => {
+    const modal = document.getElementById("modalCustom");
+    const msg = document.getElementById("modalCustomMsg");
+    if (!modal || !msg) return resolve(confirm(message||"Confirmar?"));
+    msg.innerHTML = (message||"Confirmar?") + '<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;"><button id="cfmNo" style="background:#2e3c51;border:1px solid #00d2ff;border-radius:10px;padding:.5rem 1rem;color:#fff">Cancelar</button><button id="cfmYes" style="background:#3366ff;border:1px solid #00d2ff;border-radius:10px;padding:.5rem 1rem;color:#fff">Confirmar</button></div>';
+    modal.style.display = "flex";
+    const yes = document.getElementById("cfmYes");
+    const no  = document.getElementById("cfmNo");
+    const cleanup = (result)=>{ modal.style.display="none"; msg.textContent=""; resolve(result); };
+    yes.onclick = ()=> cleanup(true);
+    no.onclick  = ()=> cleanup(false);
+  });
+}
+
+
+function atualizarCampoNumeroMVM(){
+  const input=document.getElementById('numeroMVM');
+  if(!input) return;
+  if(mvm.length>0){
+    const ultimo=Number(mvm[mvm.length-1].numeroMVM);
+    input.value = isFinite(ultimo)? ultimo+1 : "";
+  } else {
+    input.value="";
+  }
+}
+</script>
+<style>
+:root {
+  --cor-fundo: #0b1d30;
+  --cor-caixa: #1c2b3d;
+  --cor-primaria: #3366ff;
+  --cor-hover: #1a4ed8;
+  --cor-texto: #ffffff;
+  --cor-alerta: #f0ad4e;
+  --cor-erro: #ff4444;
+  --fonte: Arial, Helvetica, sans-serif;
+}
+body {
+  margin: 0;
+  font-family: var(--fonte);
+  background-color: #0a0f1c;
+  color: var(--cor-texto);
+  padding: 1rem;
+}
+.container {
+  max-width: 920px;
+  margin: auto;
+  background: #1c2b3d;
+  border: 1px solid #009fcf3a;
+  padding: 2rem;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+h1, h2, h3 { text-align: center; margin: 0; }
+h1 {
+  font-size: 2.2rem;
+  letter-spacing: 6px;
+  color: #00faff;
+  font-weight: 800;
+}
+h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #00d2ff;
+  opacity: 0.85;
+  margin-top: 0.3rem;
+}
+h3 {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #ffffffcc;
+  margin-bottom: 1rem;
+}
+label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.5rem;
+}
+input, select {
+  margin-top: 0.4rem;
+  padding: 0.7rem;
+  border: 1px solid #00d2ff44;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #181f2a;
+  color: #ffffff;
+}
+input:focus, select:focus {
+  outline: 2px solid #00d2ff;
+}
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+button {
+  background: #3366ff;
+  color: #ffffff;
+  border: 1px solid #00d2ff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover {
+  background: #1a4ed8;
+}
+button .icon {
+  font-size: 1.1em;
+}
+.auto-save-icon {
+  text-align: right;
+  font-size: 0.85rem;
+  color: #55dd55;
+}
+.info {
+  font-weight: bold;
+  text-align: center;
+  color: var(--cor-alerta);
+  opacity: 1;
+}
+.warning {
+  color: var(--cor-erro);
+  font-size: 0.9rem;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  background: #182c39;
+  border-radius: 10px;
+  overflow: hidden;
+}
+th, td {
+  border: 1px solid #2e3c51;
+  padding: 0.6rem;
+  text-align: center;
+  color: var(--cor-texto);
+}
+th {
+  background: #233246;
+  color: #00d2ff;
+  font-weight: bold;
+  font-size: 1.02rem;
+}
+tr.totalizador td {
+  background: #182c39;
+  font-weight: bold;
+  color: #f0ad4e;
+}
+.modal-custom {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(15,30,44,0.85);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.modal-content-custom {
+  background: #142536;
+  border-radius: 18px;
+  padding: 2.2rem 1.6rem 1.6rem 1.6rem;
+  text-align: center;
+  color: #fff;
+  min-width: 220px;
+  max-width: 90vw;
+  font-size: 1.1rem;
+  position: relative;
+}
+.modal-content-custom .close-btn-custom {
+  position: absolute; top: 8px; right: 14px;
+  background: none; border: none; color: #00d2ff;
+  font-size: 1.3rem; cursor: pointer;
+}
+.modal-content-custom .close-btn-custom:hover {
+  color: #ff4444;
+}
+@media (max-width: 600px) {
+  .container { padding: 1rem; }
+  .button-group { flex-direction: column; }
+  button { width: 100%; justify-content: center; }
+  .auto-save-icon { text-align: center; margin-top: 0.5rem; }
+  table { font-size: 0.92rem; }
+}
+
+/* --- UX additions (MVM) --- */
+button { min-height: 48px; }
+tbody tr:nth-child(even) { background: #172636; }
+tbody tr:hover { background: #1c3346; }
+thead th { position: sticky; top: 0; z-index: 2; }
+#toastContainer { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.toast { padding: 10px 14px; border-radius: 10px; background: #22364d; color: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.35); font-weight: 600; }
+.toast.success { border-left: 4px solid #3ddc84; }
+.toast.warn { border-left: 4px solid #f0ad4e; }
+.toast.error { border-left: 4px solid #ff4444; }
+/* end UX additions */
+</style>
+
+</head>
+<body>
+<div class="container">
+<h1>STELLANTIS</h1>
+<h2>Segurança Patrimonial</h2>
+<h3>Controle de MVM</h3>
+
+<label>Setor:
+  <select id="setor">
+    <option value="66AU - G08">66AU - G08</option>
+    <option value="Pátio central de Embalagens">Pátio central de Embalagens</option>
+    <option value="Jis G04 - 72">Jis G04 - 72</option>
+    <option value="Jis G04 - 73">Jis G04 - 73</option>
+    <option value="Mecanismo G04">Mecanismo G04</option>
+    <option value="Interni G89">Interni G89</option>
+    <option value="Caixaria G09">Caixaria G09</option>
+    <option value="Ilha Ecológica G38">Ilha Ecológica G38</option>
+    <option value="Pátio de Sucatas G15">Pátio de Sucatas G15</option>
+    <option value="Outros">Outros</option>
+  </select>
+  <input type="text" id="setorCustom" placeholder="Digite o setor" style="display:none; margin-top:0.4rem; padding:0.7rem; border:1px solid #00d2ff44; border-radius:12px; font-size:1rem; background:#181f2a; color:#ffffff;" />
+</label>
+<label>Turno:
+  <select id="turno">
+    <option value="1º">1º</option>
+    <option value="2º">2º</option>
+    <option value="3º">3º</option>
+  </select>
+</label>
+<label>Número de MVM:<input id="numeroMVM" inputmode="numeric" pattern="\d*" type="number"/>
+<div class="warning" id="alertaRepetido"></div>
+</label>
+<label>Número da Placa:<input id="numeroPlaca" placeholder="Formato Mercosul: ABC1D23" type="text"/>
+<div class="warning" id="alertaQuantidade"></div>
+</label>
+<label>Conferente/Registro:<input id="conferente" placeholder="Nome completo ou matrícula" type="text"/></label>
+<div class="info" id="info"></div>
+<div class="auto-save-icon">💾 Salvamento automático</div>
+<div class="button-group">
+<button type="button" onclick="adicionarMVM()"><span class="icon">➕</span>Adicionar</button>
+<button type="button" onclick="gerarPlanilha()"><span class="icon">📄</span>Gerar Excel</button>
+<button type="button" onclick="desfazerUltimo()"><span class="icon">↩️</span>Desfazer</button>
+<button type="button" onclick="refazerUltimo()"><span class="icon">↪️</span>Refazer</button>
+<button type="button" onclick="finalizarTurno()"><span class="icon">✅</span>Finalizar Turno</button>
+<button type="button" id="toggleTabelaBtn" onclick="toggleTabela()"><span class="icon">📊</span>Visualizar Tabela</button>
+</div>
+<table id="tabelaMVM">
+<thead>
+<tr><th>Setor</th><th>Turno</th><th>N° MVM</th><th>N° Placa</th><th>Conferente</th><th>Data e Hora</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+<div id="toastContainer" aria-live="polite"></div>
+</div>
+<div id="modalCustom" class="modal-custom" style="display:none;">
+  <div class="modal-content-custom">
+    <button class="close-btn-custom" onclick="fecharModalCustom()">×</button>
+    <span id="modalCustomMsg"></span>
+  </div>
+</div>
+<script>
+let mvm = [];
+let historico = [];
+let refazerStack = [];
+document.addEventListener("DOMContentLoaded", () => {
+  mvm = loadMVM();
+  if (mvm.length > 0) { showToast('Sessão restaurada','success'); }
+  atualizarTabela();
+  document.getElementById('numeroMVM').focus();
+  const tabela = document.getElementById("tabelaMVM");
+  tabela.style.display = getTabelaVisivel() ? "table" : "none";
+  atualizarBotaoTabela();
+  document.getElementById("setor").value = localStorage.getItem("setor") || "";
+  document.getElementById("turno").value = localStorage.getItem("turno") || "";
+  document.getElementById("numeroMVM").value = localStorage.getItem("numeroMVM") || "";
+  document.getElementById("numeroPlaca").value = localStorage.getItem("numeroPlaca") || "";
+  const usuario = localStorage.getItem("usuario"), registro = localStorage.getItem("registro");
+  if(usuario && registro) document.getElementById("conferente").value = usuario+" / "+registro;
+
+  const setorSelect = document.getElementById("setor");
+  const setorCustom = document.getElementById("setorCustom");
+  setorCustom.value = localStorage.getItem("setorCustom") || "";
+  if (setorSelect.value === "Outros") {
+    setorCustom.style.display = "block";
+  }
+  setorSelect.addEventListener("change", () => {
+    if (setorSelect.value === "Outros") {
+      setorCustom.style.display = "block";
+      setorCustom.focus();
+    } else {
+      setorCustom.style.display = "none";
+    }
+  });
+});
+function loadMVM() {
+  try { return JSON.parse(localStorage.getItem("mvm")||"[]"); } catch { return []; }
+}
+function atualizarTabela() {
+  const tbody = document.querySelector("#tabelaMVM tbody");
+  tbody.innerHTML = "";
+  mvm.forEach(item => {
+    const tr = document.createElement("tr");
+    ["setor","turno","numeroMVM","numeroPlaca","conferente","dataHora"].forEach(key=>{
+      const td = document.createElement("td"); td.textContent = item[key]; tr.appendChild(td);
+    
+  try {
+    var infoEl = document.getElementById('info');
+    if (infoEl) {
+      infoEl.textContent = (Array.isArray(mvm) && mvm.length)
+        ? 'Último MVM: ' + (mvm[mvm.length-1].numeroMVM||'') + ' | Placa: ' + (mvm[mvm.length-1].numeroPlaca||'')
+        : '';
+    }
+  } catch(e) {}
+});
+    tbody.appendChild(tr);
+  });
+  if(mvm.length){
+    const tr = document.createElement("tr"); tr.classList.add("totalizador");
+    const td = document.createElement("td"); td.colSpan=5; td.textContent=`Total de registros: ${mvm.length}`;
+    tr.appendChild(td); tbody.appendChild(tr);
+  }
+  localStorage.setItem("mvm",JSON.stringify(mvm));
+  const b=document.getElementById('toggleTabelaBtn'); if(b){ const t=document.getElementById('tabelaMVM'); const v=t.style.display==='table'; b.textContent = v?`🙈 Esconder Tabela (${mvm.length})`:`📊 Visualizar Tabela (${mvm.length})`; }
+}
+function adicionarMVM(){
+  const setorSelect = document.getElementById("setor");
+  const setorCustom = document.getElementById("setorCustom");
+  let setorFinal = setorSelect.value === "Outros" ? setorCustom.value.trim() : setorSelect.value;
+
+  const n=document.getElementById("numeroMVM").value.trim().toUpperCase();
+  const t = document.getElementById("turno").value;
+  const p=document.getElementById("numeroPlaca").value.trim().toUpperCase();
+  const c=document.getElementById("conferente").value.trim();
+
+  if(!setorFinal || !n || !p || !c){
+    mostrarErroModal("Preencha todos os campos.");
+    return;
+  }
+
+  if(mvm.some(i=>i.numeroMVM===n && i.numeroPlaca===p)){
+    mostrarErroModal("MVM e Placa já cad.");
+    return;
+  }
+
+  const item = {
+    setor: setorFinal,
+    turno: t,
+    numeroMVM: n,
+    numeroPlaca: p,
+    conferente: c,
+    dataHora: formatarData(new Date())
+  };
+
+  mvm.push(item);
+  atualizarCampoNumeroMVM();
+  historico.push({acao: "adicionar", item});
+  refazerStack = [];
+  mostrarSucessoModal("Adicionado " + n);
+  atualizarTabela();
+  limparCampos();
+  document.getElementById("numeroMVM").focus();
+}
+function desfazerUltimo(){if(!mvm.length)return; const r=mvm.pop(); historico.push({acao:"remover",item:r}); refazerStack.push({acao:"remover",item:r}); mostrarSucessoModal("Removido"); atualizarTabela(); atualizarCampoNumeroMVM();}
+function refazerUltimo(){if(!refazerStack.length)return; const a=refazerStack.pop(); if(a.acao==="remover"){mvm.push(a.item);mostrarSucessoModal("Refeito");} atualizarTabela(); atualizarCampoNumeroMVM();}
+function gerarPlanilha(){
+  if(!mvm.length){mostrarErroModal("Nada para exportar");return;}
+  const wb = XLSX.utils.book_new();
+
+  const dataRows = mvm.map(l=>({ "Setor": l.setor, "Turno": l.turno, "N° MVM": l.numeroMVM, "N° Placa": l.numeroPlaca, "Conferente": l.conferente, "Data e Hora": l.dataHora }));
+  const ws = XLSX.utils.json_to_sheet(dataRows, { origin: "A2" });
+  XLSX.utils.sheet_add_aoa(ws, [["Controle de MVM", new Date().toLocaleString('pt-BR')]], { origin: "A1" });
+  if(!ws["!merges"]) ws["!merges"]=[];
+  ws["!merges"].push({ s:{r:0,c:0}, e:{r:0,c:5} });
+
+  const startRow = 3;
+  const lastDataRow = startRow + dataRows.length - 1;
+  const totalRow = lastDataRow + 1;
+  ws[XLSX.utils.encode_cell({r: totalRow-1, c: 4})] = { t: "s", v: "TOTAL" };
+  ws[XLSX.utils.encode_cell({r: totalRow-1, c: 5})] = { t: "n", f: `COUNTA(C${startRow}:C${lastDataRow})` };
+
+  ws['!cols']=[{wch:22},{wch:10},{wch:14},{wch:18},{wch:22},{wch:18}];
+  ws['!rows'] = [{ hpt: 24 }];
+
+  const summaryMap = {};
+  mvm.forEach(l=>{ const k = `${l.setor}|||${l.turno}`; summaryMap[k]=(summaryMap[k]||0)+1; });
+  const summaryData = [["Resumo por Setor e Turno"], ["Setor","Turno","Total"]];
+  Object.entries(summaryMap).forEach(([k, n])=>{ const [s,t]=k.split("|||"); summaryData.push([s,t,n]); });
+  const wsResumo = XLSX.utils.aoa_to_sheet(summaryData);
+  wsResumo["!merges"] = [{ s:{r:0,c:0}, e:{r:0,c:2} }];
+  wsResumo['!rows'] = [{ hpt: 24 }];
+
+  XLSX.utils.book_append_sheet(wb, ws, "MVM");
+  XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
+
+  const setorAtual=(document.getElementById('setor')?.value||'Setor').replace(/\s+/g,'_');
+  const turnoAtual=(document.getElementById('turno')?.value||'Turno').replace(/\s+/g,'_');
+  const d=new Date();
+  const ts=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}-${String(d.getMinutes()).padStart(2,'0')}`;
+  const filename=`controle_mvm_${setorAtual}_${turnoAtual}_${ts}.xlsx`;
+
+  XLSX.writeFile(wb, filename);
+  mostrarSucessoModal("Planilha gerada");
+}
+function toggleTabela(){
+  const t=document.getElementById("tabelaMVM"), b=document.getElementById("toggleTabelaBtn");
+  const v=t.style.display==="table"; t.style.display=v?"none":"table";
+  b.textContent=v?`📊 Visualizar Tabela (${mvm.length})`:`🙈 Esconder Tabela (${mvm.length})`; localStorage.setItem("tabelaVisivel",!v);
+}
+function getTabelaVisivel(){return localStorage.getItem("tabelaVisivel")==="true";}
+function limparCampos(){document.getElementById("numeroMVM").value="";document.getElementById("numeroPlaca").value="";}
+function mostrarSucessoModal(m){mostrarModal(m,false);}
+function mostrarErroModal(m){mostrarModal(m,true);}
+function mostrarModal(m,err){
+  const o=document.getElementById("modalCustom"), s=document.getElementById("modalCustomMsg");
+  o.style.display="flex"; s.textContent=m; s.style.color=err?"#ff4444":"#00d2ff";
+}
+function fecharModalCustom(){document.getElementById("modalCustom").style.display="none";}
+function formatarData(d){return d.toLocaleDateString("pt-BR")+" "+d.toLocaleTimeString("pt-BR");}
+window.onbeforeunload=function(){
+  localStorage.setItem("mvm",JSON.stringify(mvm));
+  const b=document.getElementById('toggleTabelaBtn'); if(b){ const t=document.getElementById('tabelaMVM'); const v=t.style.display==='table'; b.textContent = v?`🙈 Esconder Tabela (${mvm.length})`:`📊 Visualizar Tabela (${mvm.length})`; }
+  localStorage.setItem("setor",document.getElementById("setor").value);
+  localStorage.setItem("turno",document.getElementById("turno").value);
+  localStorage.setItem("numeroMVM",document.getElementById("numeroMVM").value);
+  localStorage.setItem("numeroPlaca",document.getElementById("numeroPlaca").value);
+  localStorage.setItem("conferente",document.getElementById("conferente").value);
+  localStorage.setItem("tabelaVisivel",document.getElementById("tabelaMVM").style.display==="table");
+};
+function atualizarBotaoTabela() {
+  const t=document.getElementById("tabelaMVM");
+  const b=document.getElementById("toggleTabelaBtn");
+  const v=t.style.display==="table";
+  b.textContent=v?`🙈 Esconder Tabela (${mvm.length})`:`📊 Visualizar Tabela (${mvm.length})`;
+}
+function finalizarTurno(){
+  if(!mvm.length){mostrarErroModal("Nada para finalizar.");return;
+  try { var el=document.getElementById('info'); if(el) el.textContent=''; } catch(e) {}
+}
+  openConfirmSimple("Tem certeza que deseja finalizar o turno? Todos os dados serão apagados.").then(ok=>{
+    if(ok){
+      mvm=[]; historico=[]; refazerStack=[];
+      atualizarTabela();
+      mostrarSucessoModal("Turno finalizado.");
+    }
+  });
+}
+
+// === Helpers: Toast + Confirm ===
+function showToast(msg, type = "success", timeout = 3200) {
+  const wrap = document.getElementById("toastContainer");
+  if (!wrap) return;
+  const el = document.createElement("div");
+  el.className = "toast " + (type||"");
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity .4s"; }, timeout-400);
+  setTimeout(() => el.remove(), timeout);
+}
+
+function openConfirmSimple(message) {
+  return new Promise(resolve => {
+    const modal = document.getElementById("modalCustom");
+    const msg = document.getElementById("modalCustomMsg");
+    if (!modal || !msg) return resolve(confirm(message||"Confirmar?"));
+    msg.innerHTML = (message||"Confirmar?") + '<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;"><button id="cfmNo" style="background:#2e3c51;border:1px solid #00d2ff;border-radius:10px;padding:.5rem 1rem;color:#fff">Cancelar</button><button id="cfmYes" style="background:#3366ff;border:1px solid #00d2ff;border-radius:10px;padding:.5rem 1rem;color:#fff">Confirmar</button></div>';
+    modal.style.display = "flex";
+    const yes = document.getElementById("cfmYes");
+    const no  = document.getElementById("cfmNo");
+    const cleanup = (result)=>{ modal.style.display="none"; msg.textContent=""; resolve(result); };
+    yes.onclick = ()=> cleanup(true);
+    no.onclick  = ()=> cleanup(false);
+  });
+}
+
+
+function atualizarCampoNumeroMVM(){
+  const input=document.getElementById('numeroMVM');
+  if(!input) return;
+  if(mvm.length>0){
+    const ultimo=Number(mvm[mvm.length-1].numeroMVM);
+    input.value = isFinite(ultimo)? ultimo+1 : "";
+  } else {
+    input.value="";
+  }
+}
+</script>
+
+<div style="position:fixed;top:16px;right:16px;z-index:9999;cursor:pointer;" onclick="window.location.href='interface_principal.html';" title="Voltar para Interface">
+  <svg fill="#00d2ff" height="30" viewBox="0 0 24 24" width="30" xmlns="http://www.w3.org/2000/svg">
+    <path d="M16 13v-2H7V8l-5 4 5 4v-3h9z"/>
+    <path d="M20 3H10v2h10v14H10v2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+  </svg>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stellantis - Procedimentos</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<style>
+    :root {
+      --cor-fundo: #0b1d30;
+      --cor-caixa: #1c2b3d;
+      --cor-primaria: #3366ff;
+      --cor-hover: #1a4ed8;
+      --cor-texto: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      position: relative;
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #0a0f1c;
+      background-image: radial-gradient(circle at top left, #1b2735, #090a0f);
+      color: var(--cor-texto);
+      padding: 1rem;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: rgba(28, 43, 61, 0.6);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(0,212,255,0.15);
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.15), inset 0 0 10px rgba(0,255,255,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      position: relative;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+    .sair-icone {
+      position: absolute;
+      top: 20px;
+      right: 28px;
+      font-size: 1.5rem;
+      color: #00d2ff;
+      cursor: pointer;
+      transition: filter 0.2s;
+      filter: drop-shadow(0 0 7px #00eaffcc);
+      z-index: 2;
+    }
+    .sair-icone:hover {
+      color: #fff;
+      filter: drop-shadow(0 0 16px #00eaff);
+    }
+    h1, h2 {
+      text-align: center;
+      margin: 0;
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 6px;
+      background: linear-gradient(90deg, #00faff, #0077ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+      text-shadow: 0 0 10px rgba(0,210,255,0.5);
+    }
+    h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #00d2ff;
+      opacity: 0.85;
+      margin-top: 0.3rem;
+      margin-bottom: 0.5rem;
+    }
+    .setores-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1.3rem;
+      margin-top: 1.8rem;
+    }
+    .setor-btn {
+      background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+      color: #fff;
+      border: 1.5px solid #00d2ff;
+      border-radius: 14px;
+      font-size: 1.13rem;
+      font-weight: 700;
+      padding: 1.1rem 0.4rem;
+      box-shadow: 0 0 8px #00d2ff33, 0 0 16px #00d2ff22;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.16s;
+      letter-spacing: 1px;
+      text-shadow: 0 0 7px #00eaff44;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.1rem;
+      animation: glowPulse 1.8s infinite alternate;
+    }
+    .setor-btn:hover {
+      background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+      transform: scale(1.045);
+      box-shadow: 0 0 24px #00d2ffcc, 0 0 16px #00d2ff88;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 1rem; }
+      .setores-grid { grid-template-columns: 1fr; }
+      .sair-icone { font-size: 1.8rem; top: 10px; right: 16px; }
+    }
+    @keyframes glowPulse {
+      from { box-shadow: 0 0 8px #00d2ff33, 0 0 16px #00d2ff22; }
+      to { box-shadow: 0 0 16px #00d2ff55, 0 0 28px #00d2ff44; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+<h1>STELLANTIS</h1>
+<h2>Segurança Patrimonial</h2><h3 style="text-align:center; font-size: 1.1rem; color: #00c8ff; font-weight: 500; margin-top: -0.5rem; letter-spacing: 1px;">Procedimentos setores Setores 9132</h3>
+<div class="setores-grid">
+<button type="button" class="setor-btn" onclick="">Caixaria G08</button>
+<button type="button" class="setor-btn" onclick="">Caixaria G89</button>
+<button type="button" class="setor-btn" onclick="">Pátio central de Embalagens</button>
+<button type="button" class="setor-btn" onclick="">Jis G04 - 72</button>
+<button type="button" class="setor-btn" onclick="">Jis G04 - 73</button>
+<button type="button" class="setor-btn" onclick="">Mecanismo G04</button>
+<button type="button" class="setor-btn" onclick="">Interni G89</button>
+<button type="button" class="setor-btn" onclick="">66AU G09</button>
+<button type="button" class="setor-btn" onclick="">Ilha Ecológica G38</button>
+<button type="button" class="setor-btn" onclick="">Pátio de Sucatas G15</button>
+<button type="button" class="setor-btn" onclick="">Pátio de Desmanche de veículos</button>
+</div>
+</div>
+<div style="position:fixed;top:16px;right:16px;z-index:9999;cursor:pointer;" onclick="window.location.href='interface_principal.html';" title="Sair"><svg fill="#00d2ff" height="30" viewBox="0 0 24 24" width="30" xmlns="http://www.w3.org/2000/svg"><path d="M16 13v-2H7V8l-5 4 5 4v-3h9z"/><path d="M20 3H10v2h10v14H10v2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/></svg></div><script>document.addEventListener("DOMContentLoaded",function(){const u=localStorage.getItem("usuario"),r=localStorage.getItem("registro"),c=document.getElementById("conferente");if(c){c.value=u&&r?u+" / "+r:"";}});
+window.addEventListener('storage', () => {
+    if (!localStorage.getItem("usuario") || !localStorage.getItem("registro")) {
+        const campo = document.getElementById("conferente");
+        if (campo) campo.value = "";
+    }
+});
+</script></body>
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Stellantis - Controle de Lacres</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    /* ================= Padrão visual unificado com MVM ================= */
+    :root {
+      --cor-fundo: #0a0f1c;         /* mesmo fundo do MVM */
+      --cor-caixa: #1c2b3d;         /* idem MVM */
+      --cor-primaria: #3366ff;      /* idem MVM */
+      --cor-acento: #00d2ff;        /* bordas/realces iguais ao MVM */
+      --cor-hover: #1a4ed8;         /* idem MVM */
+      --cor-texto: #ffffff;
+      --cor-alerta: #f0ad4e;
+      --cor-erro: #ff4444;
+      --fonte: Arial, Helvetica, sans-serif; /* igual ao MVM */
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--fonte); background-color: var(--cor-fundo); color: var(--cor-texto); padding: 1rem; }
+    .container { max-width: 920px; margin: auto; background: var(--cor-caixa); border: 1px solid #009fcf3a; padding: 2rem; border-radius: 20px; display: flex; flex-direction: column; gap: 1.5rem; }
+
+    h1, h2, h3 { text-align: center; margin: 0; }
+    h1 { font-size: 2.2rem; letter-spacing: 6px; color: #00faff; font-weight: 800; }
+    h2 { font-size: 1.3rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--cor-acento); opacity: 0.85; margin-top: .3rem; }
+    h3 { font-size: 1.1rem; font-weight: 400; color: #ffffffcc; margin-bottom: 1rem; }
+
+    label { font-weight: 600; font-size: 0.95rem; display: flex; flex-direction: column; margin-top: .5rem; }
+    input, select { margin-top: .4rem; padding: .7rem; border: 1px solid #00d2ff44; border-radius: 12px; font-size: 1rem; background: #181f2a; color: #fff; }
+    input:focus, select:focus { outline: 2px solid var(--cor-acento); }
+
+    .button-group { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; }
+    button { background: var(--cor-primaria); color: #fff; border: 1px solid var(--cor-acento); padding: .75rem 1.5rem; border-radius: 14px; font-size: 1rem; font-weight: 600; display: inline-flex; align-items: center; gap: .5rem; cursor: pointer; transition: background .2s; min-height: 48px; }
+    button:hover { background: var(--cor-hover); }
+
+    .auto-save-icon { text-align: right; font-size: .85rem; color: #55dd55; }
+    .info { font-weight: bold; text-align: center; color: var(--cor-alerta); }
+    .warning { color: var(--cor-erro); font-size: .9rem; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: .95rem; background: #182c39; border-radius: 10px; overflow: hidden; }
+    th, td { border: 1px solid #2e3c51; padding: .6rem; text-align: center; color: var(--cor-texto); }
+    th { background: #233246; color: var(--cor-acento); font-weight: bold; font-size: 1.02rem; }
+    tbody tr:nth-child(even) { background: #192739; }
+    tbody tr:hover { background: #20324a; }
+    thead th { position: sticky; top: 0; z-index: 2; }
+
+    /* Toasts iguais aos do MVM */
+    #toastContainer { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+    .toast { padding: 10px 14px; border-radius: 10px; background: #22364d; color: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.35); font-weight: 600; }
+    .toast.success { border-left: 4px solid #3ddc84; }
+    .toast.warn { border-left: 4px solid var(--cor-alerta); }
+    .toast.error { border-left: 4px solid var(--cor-erro); }
+
+    /* Modal simples para feedback de ação (padrão MVM) */
+    .modal-custom { position: fixed; inset: 0; background: rgba(15,30,44,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; }
+    .modal-content-custom { background: #142536; border-radius: 18px; padding: 2.2rem 1.6rem 1.6rem; text-align: center; color: #fff; min-width: 220px; max-width: 90vw; font-size: 1.1rem; position: relative; }
+    .modal-content-custom .close-btn-custom { position: absolute; top: 8px; right: 14px; background: none; border: none; color: var(--cor-acento); font-size: 1.3rem; cursor: pointer; }
+    .modal-content-custom .close-btn-custom:hover { color: var(--cor-erro); }
+
+    @media (max-width: 600px) { .container { padding: 1rem; } .button-group { flex-direction: column; } button { width: 100%; justify-content: center; } .auto-save-icon { text-align: center; margin-top: .5rem; } table { font-size: .92rem; } }
+  </style>
+</head>
+<body>
+  <div style="position:fixed;top:16px;right:16px;z-index:9999;cursor:pointer;" onclick="window.location.href='interface_principal.html';" title="Sair">
+    <svg fill="#00d2ff" height="30" viewBox="0 0 24 24" width="30" xmlns="http://www.w3.org/2000/svg"><path d="M16 13v-2H7V8l-5 4 5 4v-3h9z"/><path d="M20 3H10v2h10v14H10v2h10a2 2 0 0 0 2-2V5a 2 2 0 0 0-2-2z"/></svg>
+  </div>
+
+  <div class="container">
+    <h1>STELLANTIS</h1>
+    <h2>Segurança Patrimonial</h2>
+    <h3>Controle de Lacres</h3>
+
+    <label>Setor:
+      <select id="setor">
+        <option>Caixaria G08</option>
+        <option>Caixaria G89</option>
+      </select>
+    </label>
+    <label>Turno:
+      <select id="turno"><option>1º</option><option>2º</option><option>3º</option></select>
+    </label>
+    <label>Número do lacre:
+      <input id="numeroLacre" type="number" inputmode="numeric" pattern="[0-9]*"/>
+      <div class="warning" id="alertaRepetido"></div>
+    </label>
+    <label>Quantidade de lacres (máx. 100):
+      <input id="quantidadeLacres" type="number" inputmode="numeric" pattern="[0-9]*"/>
+      <div class="warning" id="alertaQuantidade"></div>
+    </label>
+    <label>Conferente/Registro:
+      <input id="conferente" type="text"/>
+    </label>
+    <label>Auxiliar logístico:
+      <input id="auxiliar" type="text"/>
+    </label>
+
+    <div class="info" id="info"></div>
+    <div class="auto-save-icon">💾 Salvamento automático</div>
+
+    <div class="button-group">
+      <button onclick="adicionarLacres()">➕ Adicionar</button>
+      <button onclick="gerarPlanilha()">📄 Gerar Excel</button>
+      <button onclick="desfazerUltimo()">↩️ Desfazer</button>
+      <button onclick="desfazerTudo()">🗑️ Desfazer Tudo</button>
+      <button onclick="finalizarTurno()">✅ Finalizar Turno</button>
+      <button id="toggleTableBtn" onclick="toggleTable()">📊 Visualizar tabela</button>
+    </div>
+
+    <div id="toastContainer" aria-live="polite"></div>
+    <!-- Modal de feedback (padrão MVM) -->
+    <div id="modalCustom" class="modal-custom">
+      <div class="modal-content-custom">
+        <button class="close-btn-custom" onclick="fecharModalCustom()">×</button>
+        <span id="modalCustomMsg"></span>
+      </div>
+    </div>
+
+    <table id="tabelaLacres"><thead><tr><th>Setor</th><th>Turno</th><th>N° Lacre</th><th>Conferente</th><th>Auxiliar logístico</th><th>Data e Hora</th></tr></thead><tbody></tbody></table>
+  </div>
+
+<script>
+let lacres = JSON.parse(localStorage.getItem("lacres") || "[]");
+let actionHistory = JSON.parse(localStorage.getItem("actionHistory") || "[]");
+
+window.saveState = function () {
+  localStorage.setItem("lacres", JSON.stringify(lacres));
+  localStorage.setItem("actionHistory", JSON.stringify(actionHistory));
+};
+
+window.atualizarTabela = function () {
+  const tbody = document.querySelector("#tabelaLacres tbody");
+  tbody.innerHTML = "";
+  lacres.forEach(item => {
+    const tr = document.createElement("tr");
+    ["setor", "turno", "numeroLacre", "conferente", "auxiliar", "dataHora"].forEach(key => {
+      const td = document.createElement("td");
+      td.textContent = item[key] || "";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  const info = document.getElementById("info");
+  info.textContent = lacres.length ? `Último lacre: ${lacres[lacres.length - 1].numeroLacre} | Total: ${lacres.length}` : "";
+  const btn=document.getElementById("toggleTableBtn");
+  if(btn){ const base = (document.getElementById("tabelaLacres").style.display==="none")?"📊 Visualizar tabela":"🙈 Esconder tabela"; btn.textContent = `${base} (${lacres.length})`; }
+};
+
+window.adicionarLacres = function () {
+  const setor = document.getElementById("setor").value;
+  const turno = document.getElementById("turno").value;
+  const inicio = Number(document.getElementById("numeroLacre").value);
+  const qtd = Number(document.getElementById("quantidadeLacres").value);
+  const conferente = document.getElementById("conferente").value;
+  const auxiliar = document.getElementById("auxiliar").value;
+  const alertaRepetido = document.getElementById("alertaRepetido");
+  alertaRepetido.textContent = "";
+
+  if (!setor || !turno || isNaN(inicio) || isNaN(qtd) || qtd < 1 || qtd > 100 || !conferente) {
+    mostrarErroModal("Preencha os campos obrigatórios corretamente.");
+    return;
+  }
+
+  let repetido = false;
+  for (let i = 0; i < qtd; i++) {
+    let numeroAtual = String(inicio + i);
+    if (lacres.some(item => item.numeroLacre === numeroAtual)) {
+      repetido = true; break;
+    }
+  }
+  if (repetido) { alertaRepetido.textContent = "Existe(m) número(s) de lacre repetido(s)! Corrija para continuar."; mostrarErroModal("Número(s) repetido(s) detectado(s)."); return; }
+
+  const items = [];
+  for (let i = 0; i < qtd; i++) {
+    const item = { setor, turno, numeroLacre: String(inicio + i), conferente, auxiliar, dataHora: new Date().toLocaleString('pt-BR') };
+    lacres.push(item); items.push(item);
+  }
+
+  const proximo = inicio + qtd;
+  localStorage.setItem("numeroLacre", proximo);
+  document.getElementById("numeroLacre").value = proximo;
+  document.getElementById("numeroLacre").focus();
+  localStorage.setItem("quantidadeLacres", qtd);
+  localStorage.setItem("auxiliar", auxiliar);
+
+  actionHistory.push({ type: "add", items });
+  saveState();
+  atualizarTabela();
+  mostrarSucessoModal(`Adicionados ${qtd} lacre(s) a partir do nº ${inicio}.`);
+};
+
+function atualizarCampoNumeroLacre() {
+  if (lacres.length > 0) {
+    const ultimo = Number(lacres[lacres.length - 1].numeroLacre);
+    document.getElementById("numeroLacre").value = isFinite(ultimo) ? ultimo + 1 : "";
+  } else { document.getElementById("numeroLacre").value = ""; }
+}
+
+window.desfazerUltimo = function () {
+  if (lacres.length === 0) return;
+  const removido = lacres.pop();
+  actionHistory.push({ type: "remove", items: [removido] });
+  saveState(); atualizarTabela(); atualizarCampoNumeroLacre();
+  mostrarSucessoModal("Último registro desfeito.");
+};
+
+window.desfazerTudo = function () {
+  if (actionHistory.length === 0) return;
+  const last = actionHistory.pop();
+  if (last.type === "add") { lacres.splice(-last.items.length, last.items.length); }
+  else if (last.type === "remove") { lacres.push(...last.items); }
+  saveState(); atualizarTabela(); atualizarCampoNumeroLacre();
+  mostrarSucessoModal("Ação anterior revertida.");
+};
+
+window.gerarPlanilha = function () {
+  if (lacres.length === 0) { mostrarErroModal("Nada para exportar."); return; }
+
+  const dados = lacres.map(item => ({
+    "Setor": item.setor,
+    "Turno": item.turno,
+    "N° Lacre": item.numeroLacre,
+    "Conferente": item.conferente,
+    "Auxiliar logístico": item.auxiliar,
+    "Data e Hora": item.dataHora
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(dados, { origin: "A2" });
+  XLSX.utils.sheet_add_aoa(ws, [["Stellantis - Controle de Lacres", new Date().toLocaleString('pt-BR')]], { origin: "A1" });
+  if (!ws["!merges"]) ws["!merges"] = [];
+  ws["!merges"].push({ s: { r:0, c:0}, e: { r:0, c:5 } });
+
+  const startRow = 3; const lastDataRow = startRow + dados.length - 1; const totalRow = lastDataRow + 1;
+  ws[XLSX.utils.encode_cell({ r: totalRow-1, c: 4 })] = { t: "s", v: "TOTAL" };
+  ws[XLSX.utils.encode_cell({ r: totalRow-1, c: 5 })] = { t: "n", f: `COUNTA(C${startRow}:C${lastDataRow})` };
+
+  ws['!cols'] = [ { wch: 20 }, { wch: 10 }, { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 22 } ];
+  ws["!rows"] = ws["!rows"] || []; ws["!rows"][0] = { hpt: 24 };
+
+  const resumoMap = {}; lacres.forEach(it => { const key = `${it.setor}|||${it.turno}`; resumoMap[key] = (resumoMap[key] || 0) + 1; });
+  const resumoData = [["Resumo por Setor e Turno"], ["Setor","Turno","Total"]];
+  Object.entries(resumoMap).forEach(([k, total]) => { const [setor, turno] = k.split("|||"); resumoData.push([setor, turno, total]); });
+  const wsResumo = XLSX.utils.aoa_to_sheet(resumoData);
+  wsResumo["!merges"] = wsResumo["!merges"] || []; wsResumo["!merges"].push({ s:{r:0,c:0}, e:{r:0,c:2} });
+  wsResumo['!cols'] = [{ wch: 24 }, { wch: 10 }, { wch: 10 }]; wsResumo["!rows"] = [{ hpt: 24 }];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Lacres");
+  XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
+
+  const setorAtual = (document.getElementById("setor")?.value || "Setor").replace(/\s+/g, "_");
+  const turnoAtual = (document.getElementById("turno")?.value || "Turno").replace(/\s+/g, "_");
+  const d = new Date(); const ts = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}_${String(d.getHours()).padStart(2,"0")}-${String(d.getMinutes()).padStart(2,"0")}`;
+  const filename = `lacres_${setorAtual}_${turnoAtual}_${ts}.xlsx`;
+
+  XLSX.writeFile(wb, filename);
+  mostrarSucessoModal("Planilha gerada.");
+};
+
+window.finalizarTurno = function () {
+  openConfirmSimple("Confirmar finalização do turno e limpar dados?").then(ok => {
+    if (!ok) return;
+    lacres = []; actionHistory = []; saveState(); atualizarTabela();
+    mostrarSucessoModal("Turno finalizado com sucesso!");
+
+    document.getElementById("numeroLacre").value = "";
+    document.getElementById("quantidadeLacres").value = "";
+    document.getElementById("auxiliar").value = "";
+
+    const usuario = localStorage.getItem("usuario") || "";
+    const registro = localStorage.getItem("registro") || "";
+    document.getElementById("conferente").value = (usuario && registro) ? `${usuario} - ${registro}` : usuario;
+  });
+};
+
+window.toggleTable = function () {
+  const tbl = document.getElementById("tabelaLacres");
+  const btn = document.getElementById("toggleTableBtn");
+  if (tbl.style.display === "none") { tbl.style.display = "table"; btn.textContent = `🙈 Esconder tabela (${lacres.length})`; }
+  else { tbl.style.display = "none"; btn.textContent = `📊 Visualizar tabela (${lacres.length})`; }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const usuario = localStorage.getItem("usuario") || "";
+  const registro = localStorage.getItem("registro") || "";
+  document.getElementById("numeroLacre").value = localStorage.getItem("numeroLacre") || "";
+  document.getElementById("quantidadeLacres").value = localStorage.getItem("quantidadeLacres") || "";
+  document.getElementById("auxiliar").value = localStorage.getItem("auxiliar") || "";
+  document.getElementById("conferente").value = (usuario && registro) ? `${usuario} - ${registro}` : usuario;
+
+  document.getElementById("numeroLacre").focus();
+  atualizarTabela();
+  if (lacres.length > 0) showToast("Sessão restaurada","success");
+});
+
+// ===== UX Helpers =====
+function showToast(msg, type = "success", timeout = 3200) {
+  const wrap = document.getElementById("toastContainer");
+  if (!wrap) return;
+  const el = document.createElement("div");
+  el.className = "toast " + (type||"");
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity .4s"; }, timeout-400);
+  setTimeout(() => el.remove(), timeout);
+}
+
+// Modal de confirmação simples (compatível com o MVM)
+function openConfirmSimple(message) {
+  return new Promise(resolve => {
+    const modal = document.getElementById("modalCustom");
+    const msg = document.getElementById("modalCustomMsg");
+    if (!modal || !msg) return resolve(confirm(message||"Confirmar?"));
+    msg.innerHTML = (message||"Confirmar?") + '<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;"><button id="cfmNo" style="background:#2e3c51;border:1px solid var(--cor-acento);border-radius:10px;padding:.5rem 1rem;color:#fff">Cancelar</button><button id="cfmYes" style="background:var(--cor-primaria);border:1px solid var(--cor-acento);border-radius:10px;padding:.5rem 1rem;color:#fff">Confirmar</button></div>';
+    modal.style.display = "flex";
+    const cleanup = (result)=>{ modal.style.display="none"; msg.textContent=""; resolve(result); };
+    setTimeout(()=>{
+      const yes = document.getElementById("cfmYes");
+      const no  = document.getElementById("cfmNo");
+      if (yes && no) { yes.onclick = ()=> cleanup(true); no.onclick = ()=> cleanup(false); }
+      else { cleanup(confirm(message||"Confirmar?")); }
+    });
+  });
+}
+
+// Modal de feedback (sucesso/erro)
+function mostrarSucessoModal(m){mostrarModal(m,false);} 
+function mostrarErroModal(m){mostrarModal(m,true);} 
+function mostrarModal(m,err){ const o=document.getElementById("modalCustom"), s=document.getElementById("modalCustomMsg"); o.style.display="flex"; s.textContent=m; s.style.color= err?"var(--cor-erro)":"var(--cor-acento)"; }
+function fecharModalCustom(){ document.getElementById("modalCustom").style.display="none"; }
+
+window.addEventListener("beforeunload", saveState);
+</script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login - Stellantis</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<style>
+    :root {
+      --cor-fundo: #0b1d30;
+      --cor-caixa: #1c2b3d;
+      --cor-primaria: #00d2ff;
+      --cor-texto: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background-color: #0a0f1c;
+      background-image: radial-gradient(circle at top left, #1b2735, #090a0f);
+      color: var(--cor-texto);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .container {
+      background: rgba(28,43,61,0.95);
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0,210,255,0.15), inset 0 0 10px rgba(0,210,255,0.05);
+      text-align: center;
+      width: 100%;
+      max-width: 360px;
+      animation: fadeInUp 0.6s ease-in-out;
+    }
+    h1 {
+      font-size: 1.8rem;
+      letter-spacing: 6px;
+      background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+      text-shadow: 0 0 10px rgba(0,210,255,0.5);
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #00d2ff;
+      opacity: 0.85;
+      margin-bottom: 1.5rem;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    label {
+      text-align: left;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    input {
+      padding: 0.5rem;
+      border: 1px solid #00d2ff;
+      border-radius: 8px;
+      background: var(--cor-caixa);
+      color: var(--cor-texto);
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    input:invalid {
+      border: 1px solid #ff4444;
+      box-shadow: 0 0 5px #ff4444;
+    }
+    button {
+      background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(0,210,255,0.3);
+      transition: all 0.3s ease-in-out;
+      animation: glowPulse 1.8s infinite alternate;
+    }
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(0,210,255,0.45);
+    }
+    .mensagem {
+      background: #00d2ff;
+      padding: 0.75rem;
+      margin-top: 1rem;
+      border-radius: 10px;
+      color: #fff;
+      display: none;
+      animation: fadeOut 2.5s ease forwards;
+    }
+    @keyframes glowPulse {
+      from { box-shadow: 0 0 6px rgba(0,210,255,0.3); }
+      to   { box-shadow: 0 0 10px rgba(0,210,255,0.45); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { opacity: 0; display: none; }
+    }
+    @media (max-width: 480px) {
+      .container {
+        padding: 1.5rem;
+        max-width: 95%;
+      }
+      h1 {
+        font-size: 1.5rem;
+        letter-spacing: 4px;
+      }
+      h2 {
+        font-size: 1rem;
+        letter-spacing: 1.5px;
+      }
+      input, button {
+        font-size: 0.95rem;
+        padding: 0.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+<h1>STELLANTIS</h1>
+<h2>Segurança Patrimonial</h2>
+<form onsubmit="login(event)">
+<label for="usuario">Usuário:</label>
+<input autofocus="autofocus" id="usuario" name="usuario" required="" type="text"/>
+<label for="registro">Registro:</label>
+<input autocomplete="one-time-code" id="registro" inputmode="numeric" name="registro" required="" type="text"/>
+<button type="submit">🔐 Entrar</button>
+<div class="mensagem" id="msgSucesso">Salvo com sucesso!</div>
+</form>
+</div>
+<script>
+    function login(e) {
+      const btn = document.querySelector('button[type="submit"]');
+      if(btn){ btn.disabled = true; btn.style.opacity = '0.7'; }
+      e.preventDefault();
+      const usuario = document.getElementById('usuario').value.trim();
+      const registro = document.getElementById('registro').value.trim();
+      localStorage.setItem('usuario', usuario);
+      localStorage.setItem('registro', registro);
+      if (!usuario || !registro) { showToast("Preencha usuário e registro","warn"); if(btn){ btn.disabled=false; btn.style.opacity='1'; } return; }
+      const msg = document.getElementById("msgSucesso");
+      msg.style.display = "block";
+      showToast("Bem-vindo!", "success");
+      setTimeout(() => window.location.href = 'interface_principal.html', 800);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const usuario = localStorage.getItem("usuario");
+      const registro = localStorage.getItem("registro");
+      if (usuario) document.getElementById("usuario").value = usuario;
+      if (registro) document.getElementById("registro").value = registro;
+    });
+  </script>
+<div aria-live="polite" id="toastContainer" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:10000;display:flex;flex-direction:column;gap:8px;align-items:center;"></div>
+<div aria-modal="true" id="confirmOverlay" role="dialog" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;z-index:11000;">
+<div id="confirmBox" style="background:#142132;padding:18px;border-radius:16px;max-width:420px;width:calc(100% - 32px);color:#fff;">
+<div class="title" style="font-weight:700;margin-bottom:8px;color:#00d2ff">Confirmação</div>
+<div id="confirmMessage" style="color:#00d2ff">Tem certeza?</div>
+<div class="actions" style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
+<button id="confirmCancelBtn" style="background:#2e3c51;color:#fff;border:none;min-height:40px;border-radius:10px;padding:.5rem 1rem;">Cancelar</button>
+<button id="confirmOkBtn" style="background:#3366ff;color:#fff;border:none;min-height:40px;border-radius:10px;padding:.5rem 1rem;">Confirmar</button>
+</div>
+</div>
+</div>
+
+<script>
+(function(){
+  window.showToast = function(msg, type = "info", timeout = 3000) {
+    const wrap = document.getElementById("toastContainer");
+    if (!wrap) return;
+    const el = document.createElement("div");
+    el.textContent = msg;
+    el.setAttribute("role","status");
+    el.style.padding = "10px 14px";
+    el.style.borderRadius = "10px";
+    el.style.background = "#22364d";
+    el.style.color = "#fff";
+    el.style.boxShadow = "0 6px 24px rgba(0,0,0,.35)";
+    el.style.fontWeight = "600";
+    el.style.borderLeft = type==="error" ? "4px solid #ff4444" : (type==="warn" ? "4px solid #f0ad4e" : "4px solid #3ddc84");
+    wrap.appendChild(el);
+    setTimeout(()=>{ el.style.opacity="0"; el.style.transition="opacity .4s"; }, timeout-400);
+    setTimeout(()=>{ el.remove(); }, timeout);
+  };
+  window.openConfirm = function(message) {
+    return new Promise(resolve => {
+      const overlay = document.getElementById("confirmOverlay");
+      const msg = document.getElementById("confirmMessage");
+      const ok = document.getElementById("confirmOkBtn");
+      const cancel = document.getElementById("confirmCancelBtn");
+      if (!overlay || !msg || !ok || !cancel) return resolve(confirm(message||"Confirmar?"));
+      msg.textContent = message || "Confirmar?";
+      const cleanup = (result) => {
+        overlay.style.display = "none";
+        ok.onclick = cancel.onclick = null;
+        resolve(result);
+      };
+      ok.onclick = () => cleanup(true);
+      cancel.onclick = () => cleanup(false);
+      overlay.style.display = "flex";
+    });
+  };
+})();
+</script>
+</body>
+</html>
