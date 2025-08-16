@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<html data-theme="dark" lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stellantis - Menu</title>
+
+
+
+
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="app-theme.css" rel="stylesheet"/>
+
+</head>
+<body><div class="app-container"><div class="card"><div class="header"><h1 class="h1">STELLANTIS</h1><h2 class="h2">Segurança Patrimonial</h2><h3 class="h3">Stellantis - Menu</h3></div>
+<div class="container">
+
+
+<button class="btn" onclick="window.location.href='controle_mvm.html'">Controle de MVM</button>
+<button class="btn" onclick="window.location.href='controle_lacres.html'">Controle de Lacres</button>
+<button class="btn" onclick="window.location.href='controle_pecas_recuperadas.html'">Peças Recuperadas</button>
+<button class="btn" onclick="window.location.href='procedimentos.html'">Procedimentos</button>
+<button class="btn" onclick="openConfirm('Encerrar sessão e sair?').then(ok=&gt;{ if(ok){ localStorage.clear(); window.location.href='index.html'; } });">Sair</button>
+<div class="usuario" id="usuarioExibido"></div>
+</div>
+
+
+<div aria-live="polite" id="toastContainer" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:10000;display:flex;flex-direction:column;gap:8px;align-items:center;"></div>
+<div aria-modal="true" id="confirmOverlay" role="dialog" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;z-index:11000;">
+<div id="confirmBox" style="background:#142132;padding:18px;border-radius:16px;max-width:420px;width:calc(100% - 32px);color:#fff;">
+<div class="title" style="font-weight:700;margin-bottom:8px;color:#00d2ff">Confirmação</div>
+<div id="confirmMessage" style="color:#00d2ff">Tem certeza?</div>
+<div class="actions" style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
+<button class="btn btn-secondary" id="confirmCancelBtn" style="background:#2e3c51;color:#fff;border:none;min-height:40px;border-radius:10px;padding:.5rem 1rem;">Cancelar</button>
+<button class="btn" id="confirmOkBtn" style="background:#3366ff;color:#fff;border:none;min-height:40px;border-radius:10px;padding:.5rem 1rem;">Confirmar</button>
+</div>
+</div>
+</div>
+
+
+</div></div><script defer="" src="ui-core.js"></script></body>
+</html>

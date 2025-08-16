@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+
+<html data-theme="dark" lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stellantis - Controle de Lacres</title>
+
+
+
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="app-theme.css" rel="stylesheet"/>
+
+</head>
+<body><div class="app-container"><div class="card"><div class="header"><h1 class="h1">STELLANTIS</h1><h2 class="h2">Segurança Patrimonial</h2><h3 class="h3">Controle de MVM</h3></div>
+<div class="container">
+
+
+
+<label>Setor:
+  <select id="setor">
+<option value="66AU - G08">66AU - G08</option>
+<option value="Pátio central de Embalagens">Pátio central de Embalagens</option>
+<option value="Jis G04 - 72">Jis G04 - 72</option>
+<option value="Jis G04 - 73">Jis G04 - 73</option>
+<option value="Mecanismo G04">Mecanismo G04</option>
+<option value="Interni G89">Interni G89</option>
+<option value="Caixaria G09">Caixaria G09</option>
+<option value="Ilha Ecológica G38">Ilha Ecológica G38</option>
+<option value="Pátio de Sucatas G15">Pátio de Sucatas G15</option>
+<option value="Outros">Outros</option>
+</select>
+<input id="setorCustom" placeholder="Digite o setor" style="display:none; margin-top:0.4rem; padding:0.7rem; border:1px solid #00d2ff44; border-radius:12px; font-size:1rem; background:#181f2a; color:#ffffff;" type="text"/>
+</label>
+<label>Turno:
+  <select id="turno">
+<option value="1º">1º</option>
+<option value="2º">2º</option>
+<option value="3º">3º</option>
+</select>
+</label>
+<label>Número de MVM:<input id="numeroMVM" inputmode="numeric" pattern="\d*" type="number"/>
+<div class="warning" id="alertaRepetido"></div>
+</label>
+<label>Número da Placa:<input id="numeroPlaca" placeholder="Formato Mercosul: ABC1D23" type="text"/>
+<div class="warning" id="alertaQuantidade"></div>
+</label>
+<label>Conferente/Registro:<input id="conferente" placeholder="Nome completo ou matrícula" type="text"/></label>
+<div class="info" id="info"></div>
+<div class="auto-save-icon">💾 Salvamento automático</div>
+<div class="button-group">
+<button class="btn" onclick="adicionarMVM()" type="button"><span class="icon">➕</span>Adicionar</button>
+<button class="btn" onclick="gerarPlanilha()" type="button"><span class="icon">📄</span>Gerar Excel</button>
+<button class="btn" onclick="desfazerUltimo()" type="button"><span class="icon">↩️</span>Desfazer</button>
+<button class="btn" onclick="refazerUltimo()" type="button"><span class="icon">↪️</span>Refazer</button>
+<button class="btn btn-danger" onclick="finalizarTurno()" type="button"><span class="icon">✅</span>Finalizar Turno</button>
+<button class="btn btn-ghost" id="toggleTabelaBtn" onclick="toggleTabela()" type="button"><span class="icon">📊</span>Visualizar Tabela</button>
+</div>
+<table class="table" id="tabelaMVM">
+<thead>
+<tr><th>Setor</th><th>Turno</th><th>N° MVM</th><th>N° Placa</th><th>Conferente</th><th>Data e Hora</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+<div aria-live="polite" id="toastContainer"></div>
+</div>
+<div class="modal-custom" id="modalCustom" style="display:none;">
+<div class="modal-content-custom">
+<button class="close-btn-custom" onclick="fecharModalCustom()">×</button>
+<span id="modalCustomMsg"></span>
+</div>
+</div>
+
+<div onclick="window.location.href='interface_principal.html';" style="position:fixed;top:16px;right:16px;z-index:9999;cursor:pointer;" title="Voltar para Interface">
+<svg fill="#00d2ff" height="30" viewbox="0 0 24 24" width="30" xmlns="http://www.w3.org/2000/svg">
+<path d="M16 13v-2H7V8l-5 4 5 4v-3h9z"></path>
+<path d="M20 3H10v2h10v14H10v2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"></path>
+</svg>
+</div>
+</div></div><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+// === Helpers: Toast + Confirm ===
+function showToast(msg, type = "success", timeout = 3200) {
+  const wrap = document.getElementById("toastContainer");
+  if (!wrap) return;
+  const el = document.createElement("div");
+  el.className = "toast " + (type||"");
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity .4s"; }, timeout-400);
+  setTimeout(() => el.remove(), timeout);
+}
+
+function openConfirmSimple(message) {
+  return new Promise(resolve => {
+    const modal = document.getElementById("modalCustom");
+    const msg = document.getElementById("modalCustomMsg");
+    if (!modal || !msg) return resolve(confirm(message||"Confirmar?"));
+    msg.innerHTML = (message||"Confirmar?") + '<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;"><button id="cfmNo" style="background:#2e3c51;border:1px solid #00d2ff;border-radius:10px;padding:.5rem 1rem;color:#fff">Cancelar</button><button id="cfmYes" style="background:#3366ff;border:1px solid #00d2ff;border-radius:10px;padding:.5rem 1rem;color:#fff">Confirmar</button></div>';
+    modal.style.display = "flex";
+    const yes = document.getElementById("cfmYes");
+    const no  = document.getElementById("cfmNo");
+    const cleanup = (result)=>{ modal.style.display="none"; msg.textContent=""; resolve(result); };
+    yes.onclick = ()=> cleanup(true);
+    no.onclick  = ()=> cleanup(false);
+  });
+}
+
+
+function atualizarCampoNumeroMVM(){
+  const input=document.getElementById('numeroMVM');
+  if(!input) return;
+  if(mvm.length>0){
+    const ultimo=Number(mvm[mvm.length-1].numeroMVM);
+    input.value = isFinite(ultimo)? ultimo+1 : "";
+  } else {
+    input.value="";
+  }
+}
+</script><script defer="" src="ui-core.js"></script></body>
+</html>
